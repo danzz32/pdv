@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  # Serviço do Backend (API)
+  backend:
+    build: ./pdv-back        # Onde encontrar o Dockerfile (Pdv/pdv-back)
+    container_name: pdv_api
+    ports:
+      - "8000:8000"          # Mapeia porta 8000 do host -> 8000 do container
+    # volumes:
+    #   - ./pdv-back:/app    # Descomente para desenvolvimento (hot reload)
+
+  # Serviço do Frontend (React App)
+  frontend:
+    build: ./pdv-front       # Onde encontrar o Dockerfile (Pdv/pdv-front)
+    container_name: pdv_web
+    ports:
+      - "8080:80"            # Mapeia porta 8080 do host -> 80 do Nginx (container)
+    # 'depends_on' removido daqui
