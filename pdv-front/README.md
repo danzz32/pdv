@@ -1,73 +1,70 @@
-# React + TypeScript + Vite
+# PDV Front - Cardápio Online
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Este é o repositório para o front-end do projeto PDV (Ponto de Venda), uma aplicação web moderna desenvolvida para atuar como um cardápio digital interativo.
 
-Currently, two official plugins are available:
+## ✨ Principais Funcionalidades
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Visualização de Cardápio:** Exibe os itens do cardápio de forma organizada e atraente.
+- **Agrupamento por Categoria:** Os itens são agrupados por categorias (ex: Hambúrgueres, Bebidas, Sobremesas) para fácil navegação.
+- **Navegação Rápida por Categorias:** Uma barra de navegação fixa permite ao usuário pular diretamente para a categoria desejada.
+- **Design Responsivo:** Interface adaptável para uma boa experiência tanto em desktops quanto em dispositivos móveis.
 
-## React Compiler
+## 🚀 Tecnologias Utilizadas
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **React:** Biblioteca para construção da interface de usuário.
+- **TypeScript:** Superset de JavaScript que adiciona tipagem estática.
+- **Vite:** Ferramenta de build moderna e rápida para desenvolvimento front-end.
+- **Tailwind CSS:** Framework CSS utility-first para estilização rápida e customizável.
+- **Radix UI:** Componentes de UI de baixo nível e acessíveis.
+- **Lucide React:** Biblioteca de ícones.
+- **React Router DOM:** Para gerenciamento de rotas na aplicação.
 
-## Expanding the ESLint configuration
+## 🏁 Começando
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Siga os passos abaixo para configurar e executar o projeto em seu ambiente de desenvolvimento local.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Pré-requisitos
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- [Node.js](https://nodejs.org/en/) (versão 18 ou superior)
+- [Yarn](https://yarnpkg.com/) (gerenciador de pacotes)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Instalação
+
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/seu-usuario/pdv-front.git
+   ```
+2. Navegue até o diretório do projeto:
+   ```bash
+   cd pdv-front
+   ```
+3. Instale as dependências:
+   ```bash
+   yarn install
+   ```
+
+### Executando o Projeto
+
+Para iniciar o servidor de desenvolvimento, execute:
+
+```bash
+yarn dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+A aplicação estará disponível em `http://localhost:5173`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 📜 Scripts Disponíveis
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- `yarn dev`: Inicia o servidor de desenvolvimento com Hot Reload.
+- `yarn build`: Compila e otimiza a aplicação para produção.
+- `yarn lint`: Executa o linter para analisar o código e encontrar problemas.
+- `yarn preview`: Inicia um servidor local para visualizar a build de produção.
+
+## 🐳 Deployment
+
+O projeto está configurado para ser implantado utilizando Docker. O `Dockerfile` e o arquivo `nginx.conf` estão incluídos para criar uma imagem de produção e servi-la com Nginx.
+
+Para construir a imagem Docker, execute:
+```bash
+docker build -t pdv-front .
 ```
