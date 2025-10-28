@@ -17,6 +17,9 @@ pylint
 pytest
 pytest-mock
 python-dotenv==1.1.1
+python-jose
+python-jose[cryptography]
+python-multipart
 pyyaml==6.0.3
 sniffio==1.3.1
 sqlalchemy

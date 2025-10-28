@@ -1,3 +1,4 @@
+# app/routes/pedidos.py
 """
 Define as rotas (endpoints) da API para o recurso 'Pedido'.
 
@@ -15,10 +16,15 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 # 3. Importações locais da aplicação (local application)
-# Corrigido E0402 (importação relativa)
-from app.auth import get_current_active_user, get_current_user
+# Importar as dependências REAIS do nosso app/auth.py
+from app.auth import (
+    get_optional_user,
+    get_current_customer,
+    get_current_admin
+)
+# --- FIM DA ATUALIZAÇÃO ---
 from app.database import get_db
-from app.models.user import User
+from app.models.user import User  # Para type-hinting
 from app.schemas.pedido import Pedido, PedidoCreateAPI, PedidoUpdate
 from app.services.pedido import PedidoService
 
@@ -32,25 +38,26 @@ router = APIRouter(
     "/",
     response_model=Pedido,
     status_code=status.HTTP_201_CREATED,
-    summary="Criar um novo pedido",
+    summary="Criar um novo pedido (Autenticação Opcional)",
     description="Endpoint principal para submeter um novo pedido (carrinho)."
 )
 def create_pedido(
         pedido_in: PedidoCreateAPI,
         db: Session = Depends(get_db),
         service: PedidoService = Depends(PedidoService),
-        current_user: Optional[User] = Depends(get_current_user)
+        # --- ATUALIZAR DEPENDÊNCIA ---
+        # Substituir 'get_current_user' pelo 'get_optional_user'
+        current_user: Optional[User] = Depends(get_optional_user)
 ):
     """
     Cria um novo pedido com base nos itens do carrinho, associando-o
-    a um usuário logado ou a uma sessão anônima.
+    a um usuário logado (se o token for fornecido) ou a uma sessão anônima.
     """
     try:
         return service.create_pedido(db=db, pedido_in=pedido_in, current_user=current_user)
     except HTTPException as e:
         raise e
     except Exception as e:
-        # W0707/W0612: Corrigido para incluir a exceção original no raise
         raise HTTPException(
             status_code=500,
             detail="Erro interno ao processar o pedido."
@@ -79,18 +86,20 @@ def get_pedido_by_session(
 
 @router.get(
     "/me",
-    response_model=List[Pedido],  # 'List' agora está definido
-    summary="Listar meus pedidos (Logado)",
+    response_model=List[Pedido],
+    summary="Listar meus pedidos (Cliente Logado)",
     description="Retorna o histórico de pedidos do usuário autenticado."
 )
 def get_meus_pedidos(
         db: Session = Depends(get_db),
         service: PedidoService = Depends(PedidoService),
-        current_user: User = Depends(get_current_active_user)
+        # --- ATUALIZAR DEPENDÊNCIA ---
+        # Substituir 'get_current_active_user' pelo 'get_current_customer'
+        current_user: User = Depends(get_current_customer)
 ):
     """
     Retorna uma lista de todos os pedidos feitos pelo usuário
-    atualmente autenticado.
+    atualmente autenticado (requer role 'CLIENTE').
     """
     return service.pedido_repo.get_multi_by_usuario(db, usuario_id=current_user.id)
 
@@ -99,16 +108,18 @@ def get_meus_pedidos(
     "/{pedido_id}/status",
     response_model=Pedido,
     summary="Atualizar status do pedido (Admin)",
-    description="Usado pelo painel do admin para mudar o status (Ex: PENDENTE -> EM_PREPARACAO)."
+    description="Usado pelo painel do admin para mudar o status (Ex: PENDENTE -> EM_PREPARACAO).",
+    # --- PROTEGER A ROTA ---
+    dependencies=[Depends(get_current_admin)]
 )
 def update_pedido_status(
-        pedido_id: uuid.UUID,  # 'uuid' agora está definido
+        pedido_id: uuid.UUID,
         status_in: PedidoUpdate,
         db: Session = Depends(get_db),
         service: PedidoService = Depends(PedidoService)
 ):
     """
-    Atualiza o status de um pedido existente (rota protegida).
+    Atualiza o status de um pedido existente (requer role 'ADMIN').
     """
     db_pedido = service.pedido_repo.get(db, id=pedido_id)
     if not db_pedido:

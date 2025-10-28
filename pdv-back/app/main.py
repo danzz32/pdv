@@ -1,3 +1,4 @@
+# app/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -11,6 +12,7 @@ from app.models import (
 
 # Importando rotas
 from app.routes import items, users, categorias, pedidos
+from app.routes import auth as auth_router  # <-- IMPORTAR ROTA DE AUTH
 
 Base.metadata.create_all(bind=engine)
 
@@ -20,6 +22,8 @@ app = FastAPI(
     version="0.1.0",
     # Documentação das Tags
     openapi_tags=[
+        # <-- ADICIONAR NOVA TAG ---
+        {"name": "Autenticação", "description": "Operações de login e gerenciamento de token."},
         {"name": "Pedidos", "description": "Operações para criar e gerenciar pedidos."},
         {"name": "Itens do Cardápio", "description": "Gerenciamento do cardápio (itens, preços, etc)."},
         {"name": "Categorias", "description": "Gerenciamento das categorias dos itens."},
@@ -27,8 +31,11 @@ app = FastAPI(
     ]
 )
 
-# Configuração do CORS
-origins = ["*"]
+# Configuração do CORS (Restaurando para nossas origens de dev)
+origins = [
+    "http://localhost:5173",  # Frontend Vite
+    "http://localhost:8080",  # Docker Nginx
+]
 
 app.add_middleware(
     CORSMiddleware,
@@ -39,6 +46,7 @@ app.add_middleware(
 )
 
 # Incluindo rotas
+app.include_router(auth_router.router)  # <-- INCLUIR ROTA DE AUTH
 app.include_router(pedidos.router)
 app.include_router(items.router)
 app.include_router(categorias.router)

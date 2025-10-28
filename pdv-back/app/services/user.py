@@ -11,11 +11,12 @@ from typing import Optional
 # 2. Importações de terceiros (third-party)
 from sqlalchemy.orm import Session
 from passlib.context import CryptContext
-from fastapi import HTTPException, status, Depends  # Importação 'Depends' é crucial
+from fastapi import HTTPException, status, Depends
 
 # 3. Importações locais da aplicação
-from app.schemas.user import User, UserCreate  # Importação explícita
-from app.repositories.user import UserRepository  # Importação absoluta
+from app.schemas.user import UserCreate  # Schema para entrada
+from app.models.user import User as UserModel  # Modelo para lógica interna e retorno
+from app.repositories.user import UserRepository
 
 # Configuração do Hashing de Senha
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -24,9 +25,6 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 class UserService:
     """Camada de serviço para lógica de negócios de Usuário."""
 
-    # --- Refatoração de Clean Code (Injeção de Dependência) ---
-    # O __init__ deve usar Depends() para que o FastAPI possa injetar
-    # corretamente o repositório (que por sua vez recebe a sessão 'db').
     def __init__(self, repository: UserRepository = Depends(UserRepository)):
         """
         Inicializa o serviço injetando o repositório de usuário.
@@ -41,13 +39,13 @@ class UserService:
         """Verifica se a senha em texto plano bate com o hash."""
         return pwd_context.verify(plain_password, hashed_password)
 
-    def create_user(self, db: Session, user_in: UserCreate) -> User:
+    def create_user(self, db: Session, user_in: UserCreate) -> UserModel:
         """
         Cria um novo usuário.
 
         - Valida se o e-mail já existe.
         - Faz o hash da senha.
-        - Persiste no banco de dados.
+        - Passa o schema para o repositório (que trata o mapeamento).
         """
         db_user = self.repository.get_by_email(db, email=user_in.email)
         if db_user:
@@ -59,16 +57,31 @@ class UserService:
         # Faz o hash da senha ANTES de enviar ao repositório
         hashed_password = self.get_password_hash(user_in.password)
 
-        # Cria um novo schema de entrada para o repositório
-        # (Boa prática para garantir que o 'user_in' original não seja modificado)
+        # Cria um novo schema de entrada com o HASH no campo 'password'
         repo_user_in = UserCreate(
             email=user_in.email,
             nome=user_in.nome,
-            password=hashed_password  # Agora envia o hash
+            password=hashed_password
         )
 
-        return self.repository.create(db, user_in=repo_user_in)
+        # Chama o repositório (que espera 'obj_in: UserCreate')
+        return self.repository.create(db, obj_in=repo_user_in)
 
-    def get_user_by_email(self, db: Session, email: str) -> Optional[User]:
-        """Busca um usuário pelo seu e-mail."""
+    def get_user_by_email(self, db: Session, email: str) -> Optional[UserModel]:
+        """Busca um usuário (modelo) pelo seu e-mail."""
         return self.repository.get_by_email(db, email=email)
+
+    # --- NOVO MÉTODO PARA AUTENTICAÇÃO ---
+    def authenticate_user(self, db: Session, email: str, password: str) -> Optional[UserModel]:
+        """
+        Verifica se um usuário existe e se a senha está correta.
+
+        Retorna o objeto UserModel se for válido, senão None.
+        """
+        user = self.get_user_by_email(db, email=email)
+
+        # Se o usuário não existe ou a senha está incorreta
+        if not user or not self.verify_password(password, user.hashed_password):
+            return None
+
+        return user

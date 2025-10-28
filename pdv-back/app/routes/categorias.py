@@ -1,3 +1,4 @@
+# app/routes/categorias.py
 """
 Define as rotas (endpoints) da API para o recurso 'Categoria'.
 
@@ -11,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas.categoria import Categoria, CategoriaCreate
 from app.services.categoria import CategoriaService
+from app.auth import get_current_admin  # <-- IMPORTAR DEPENDÊNCIA DE ADMIN
 
 router = APIRouter(
     prefix="/api/categorias",
@@ -30,7 +32,7 @@ def read_categorias(
         service: CategoriaService = Depends(CategoriaService)
 ):
     """
-    Obtém uma lista paginada de todas as categorias.
+    Obtém uma lista paginada de todas as categorias. (Público)
     """
     return service.get_categorias(db, skip=skip, limit=limit)
 
@@ -39,7 +41,9 @@ def read_categorias(
     "/",
     response_model=Categoria,
     status_code=status.HTTP_201_CREATED,
-    summary="Criar nova categoria (Admin)"
+    summary="Criar nova categoria (Admin)",
+    description="Cria uma nova categoria no banco de dados. (Requer role 'ADMIN')",
+    dependencies=[Depends(get_current_admin)]
 )
 def create_categoria(
         categoria_in: CategoriaCreate,
