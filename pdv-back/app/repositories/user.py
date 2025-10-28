@@ -1,57 +1,76 @@
-# app/repositories/user.py
+"""
+Repositório para o modelo User (Usuário).
+
+Herda o CRUD genérico de BaseRepository e implementa métodos
+específicos, como a busca por e-mail.
+"""
+
+# 1. Importações da biblioteca padrão
+import uuid
+from typing import Optional, Any
+
+# 2. Importações de terceiros (third-party)
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
+
+# 3. Importações locais da aplicação
 from app.models.user import User
-from app.schemas.user import *  # Vamos criar este módulo em breve
+from app.repositories.base import BaseRepository  # Importação da Base
+from app.schemas.user import UserCreate, UserUpdate
 
 
-# Nota: Os schemas (ex: schemas.user.UserCreate) serão definidos depois
+class UserRepository(BaseRepository[User, UserCreate, UserUpdate]):
+    """
+    Repositório para User, herdando de BaseRepository.
+    """
 
-class UserRepository:
+    def __init__(self):
+        """
+        Inicializa o repositório base com o modelo ORM User.
+        """
+        super().__init__(User)
 
-    def get(self, db: Session, id: uuid.UUID) -> User | None:
-        return db.query(User).filter(User.id == id).first()
+    # --- Métodos Sobrescritos (Overridden) para tratamento do Hashed Password ---
 
-    def get_by_email(self, db: Session, email: str) -> User | None:
-        return db.query(User).filter(User.email == email).first()
+    def create(self, db: Session, *, obj_in: UserCreate) -> User:
+        """
+        Cria um novo usuário, mapeando 'password' do schema para
+        'hashed_password' no modelo ORM.
+        """
+        # Converte o schema Pydantic para um dict, assumindo que
+        # o 'password' aqui JÁ É O HASH.
+        obj_in_data = obj_in.model_dump()
 
-    def get_multi(self, db: Session, skip: int = 0, limit: int = 100) -> list[type[User]]:
-        return db.query(User).offset(skip).limit(limit).all()
+        # Mapeamento do campo: Remove 'password' e adiciona 'hashed_password'
+        hashed_password = obj_in_data.pop("password")
+        obj_in_data["hashed_password"] = hashed_password
 
-    def create(self, db: Session, user_in: UserCreate) -> User:
-        # A lógica de hash da senha ficará no 'serviço'
-        db_user = User(
-            email=user_in.email,
-            nome=user_in.nome,
-            hashed_password=user_in.password  # Assumindo que o schema tem 'password'
-        )
-        db.add(db_user)
+        db_obj = self.model(**obj_in_data)  # Cria o modelo com os dados corrigidos
+
+        db.add(db_obj)
         db.commit()
-        db.refresh(db_user)
-        return db_user
+        db.refresh(db_obj)
+        return db_obj
 
-    def update(self, db: Session, db_user: User, user_in: UserUpdate) -> User:
-        # Converte o schema Pydantic para um dict
-        update_data = user_in.model_dump(exclude_unset=True)
+    def update(self, db: Session, *, db_obj: User, obj_in: UserUpdate) -> User:
+        """
+        Atualiza o usuário, tratando 'password' como 'hashed_password'.
+        """
+        # A lógica da BaseRepository funciona para a maioria dos campos,
+        # mas precisamos intervir para o campo 'password'.
 
-        # Lógica para não atualizar a senha se ela não for fornecida
-        if "password" in update_data and update_data["password"]:
-            # A lógica de hash deve estar no serviço
-            db_user.hashed_password = update_data["password"]
+        update_data = obj_in.model_dump(exclude_unset=True)
 
-        db_user.nome = update_data.get("nome", db_user.nome)
-        db_user.email = update_data.get("email", db_user.email)
+        if "password" in update_data and update_data["password"] is not None:
+            # Assume que o serviço já fez o hash!
+            update_data["hashed_password"] = update_data.pop("password")
 
-        db.add(db_user)
-        db.commit()
-        db.refresh(db_user)
-        return db_user
+        # Chama a lógica genérica de atualização da BaseRepository,
+        # que agora fará a atualização usando 'hashed_password'.
+        return super().update(db, db_obj=db_obj, obj_in=BaseModel(**update_data))
 
-    def remove(self, db: Session, id: uuid.UUID) -> User | None:
-        db_user = self.get(db, id=id)
-        if db_user:
-            db.delete(db_user)
-            db.commit()
-        return db_user
+    # --- Métodos Específicos deste Repositório (Mantidos) ---
 
-# Instância (opcional, ou podemos usar Injeção de Dependência)
-# user_repository = UserRepository()
+    def get_by_email(self, db: Session, *, email: str) -> Optional[User]:
+        """Busca um usuário específico pelo seu endereço de e-mail."""
+        return db.query(self.model).filter(email == self.model.email).first()

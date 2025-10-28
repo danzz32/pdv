@@ -2,7 +2,8 @@
 import uuid
 from sqlalchemy import Column, Float, ForeignKey, UUID
 from sqlalchemy.orm import relationship
-from ..database import Base
+
+from app.database import Base
 
 
 class PedidoItemModificador(Base):

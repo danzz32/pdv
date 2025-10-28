@@ -1,16 +1,26 @@
-# app/routes/pedidos.py (ATUALIZADO)
+"""
+Define as rotas (endpoints) da API para o recurso 'Pedido'.
+
+Este módulo utiliza o APIRouter do FastAPI para agrupar as operações
+de criação e consulta de pedidos, tanto para usuários logados
+quanto anônimos.
+"""
+
+# 1. Importações de bibliotecas padrão (standard library)
 import uuid
 from typing import List, Optional
+
+# 2. Importações de bibliotecas de terceiros (third-party)
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-# Importar os schemas necessários explicitamente
-from app.schemas.pedido import Pedido, PedidoCreateAPI, PedidoUpdate
+# 3. Importações locais da aplicação (local application)
+# Corrigido E0402 (importação relativa)
+from app.auth import get_current_active_user, get_current_user
+from app.database import get_db
 from app.models.user import User
-from ..database import get_db
-
-from ..services.pedido import PedidoService
-from ..auth import get_current_user, get_current_active_user
+from app.schemas.pedido import Pedido, PedidoCreateAPI, PedidoUpdate
+from app.services.pedido import PedidoService
 
 router = APIRouter(
     prefix="/api/pedidos",
@@ -25,24 +35,26 @@ router = APIRouter(
     summary="Criar um novo pedido",
     description="Endpoint principal para submeter um novo pedido (carrinho)."
 )
-def create_pedido_endpoint(
+def create_pedido(
         pedido_in: PedidoCreateAPI,
         db: Session = Depends(get_db),
-
-        # --- CORREÇÃO ---
-        # Injetamos a CLASSE PedidoService, não a instância
         service: PedidoService = Depends(PedidoService),
-        # --- FIM DA CORREÇÃO ---
-
         current_user: Optional[User] = Depends(get_current_user)
 ):
+    """
+    Cria um novo pedido com base nos itens do carrinho, associando-o
+    a um usuário logado ou a uma sessão anônima.
+    """
     try:
         return service.create_pedido(db=db, pedido_in=pedido_in, current_user=current_user)
     except HTTPException as e:
         raise e
     except Exception as e:
-        # É uma boa prática logar o 'e' aqui
-        raise HTTPException(status_code=500, detail="Erro interno ao processar o pedido.")
+        # W0707/W0612: Corrigido para incluir a exceção original no raise
+        raise HTTPException(
+            status_code=500,
+            detail="Erro interno ao processar o pedido."
+        ) from e
 
 
 @router.get(
@@ -54,12 +66,11 @@ def create_pedido_endpoint(
 def get_pedido_by_session(
         session_id: str,
         db: Session = Depends(get_db),
-
-        # --- CORREÇÃO ---
         service: PedidoService = Depends(PedidoService)
-        # --- FIM DA CORREÇÃO ---
 ):
-    # Acessamos o repositório através da instância 'service' injetada
+    """
+    Consulta um pedido usando o ID da sessão anônima.
+    """
     db_pedido = service.pedido_repo.get_by_session_id(db, session_id=session_id)
     if db_pedido is None:
         raise HTTPException(status_code=404, detail="Pedido não encontrado.")
@@ -68,19 +79,19 @@ def get_pedido_by_session(
 
 @router.get(
     "/me",
-    response_model=List[Pedido],
+    response_model=List[Pedido],  # 'List' agora está definido
     summary="Listar meus pedidos (Logado)",
     description="Retorna o histórico de pedidos do usuário autenticado."
 )
 def get_meus_pedidos(
         db: Session = Depends(get_db),
-
-        # --- CORREÇÃO ---
         service: PedidoService = Depends(PedidoService),
-        # --- FIM DA CORREÇÃO ---
-
         current_user: User = Depends(get_current_active_user)
 ):
+    """
+    Retorna uma lista de todos os pedidos feitos pelo usuário
+    atualmente autenticado.
+    """
     return service.pedido_repo.get_multi_by_usuario(db, usuario_id=current_user.id)
 
 
@@ -91,14 +102,14 @@ def get_meus_pedidos(
     description="Usado pelo painel do admin para mudar o status (Ex: PENDENTE -> EM_PREPARACAO)."
 )
 def update_pedido_status(
-        pedido_id: uuid.UUID,
+        pedido_id: uuid.UUID,  # 'uuid' agora está definido
         status_in: PedidoUpdate,
         db: Session = Depends(get_db),
-
-        # --- CORREÇÃO ---
         service: PedidoService = Depends(PedidoService)
-        # --- FIM DA CORREÇÃO ---
 ):
+    """
+    Atualiza o status de um pedido existente (rota protegida).
+    """
     db_pedido = service.pedido_repo.get(db, id=pedido_id)
     if not db_pedido:
         raise HTTPException(status_code=404, detail="Pedido não encontrado.")

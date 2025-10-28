@@ -2,7 +2,9 @@
 import uuid
 from sqlalchemy import Column, Integer, Float, ForeignKey, UUID, String
 from sqlalchemy.orm import relationship
-from ..database import Base
+
+# E0402: Corrigida a importação relativa '..' para absoluta 'app.'
+from app.database import Base
 
 
 class PedidoItem(Base):

@@ -1,36 +1,45 @@
-# app/repositories/grupo_modificador.py
+"""
+Repositório para o modelo GrupoModificador.
 
+Herda o CRUD genérico de BaseRepository e implementa métodos
+específicos, como buscar todos os grupos de um item.
+"""
+
+# 1. Importações da biblioteca padrão
+import uuid
+from typing import List, Optional, Any
+
+# 2. Importações de terceiros (third-party)
 from sqlalchemy.orm import Session
+
+# 3. Importações locais da aplicação
 from app.models.grupo_modificador import GrupoModificador
-from app.schemas.grupo_modificador import *
+from app.repositories.base import BaseRepository
+from app.schemas.grupo_modificador import (
+    GrupoModificadorCreate,
+    GrupoModificadorUpdate
+)
 
 
-class GrupoModificadorRepository:
+class GrupoModificadorRepository(
+    BaseRepository[GrupoModificador, GrupoModificadorCreate, GrupoModificadorUpdate]
+):
+    """
+    Repositório para GrupoModificador, herdando de BaseRepository.
+    """
 
-    def get(self, db: Session, id: uuid.UUID) -> GrupoModificador | None:
-        return db.query(GrupoModificador).filter(
-            GrupoModificador.id == id).first()
+    def __init__(self):
+        """
+        Inicializa o repositório base com o modelo ORM GrupoModificador.
+        """
+        super().__init__(GrupoModificador)
 
-    def get_multi_by_item(self, db: Session, item_id: uuid.UUID) -> list[type[GrupoModificador]]:
-        return db.query(GrupoModificador) \
-            .filter(item_id == GrupoModificador.item_id).all()
+    def get_multi_by_item(
+            self, db: Session, *, item_id: uuid.UUID
+    ) -> list[type[GrupoModificador]]:
+        """
+        Busca todos os grupos modificadores associados a um item_id específico.
 
-    def create(self, db: Session,
-               grupo_in: GrupoModificadorCreate) -> GrupoModificador:
-        db_grupo = GrupoModificador(
-            **grupo_in.model_dump()
-        )
-        db.add(db_grupo)
-        db.commit()
-        db.refresh(db_grupo)
-        return db_grupo
-
-    def remove(self, db: Session, id: uuid.UUID) -> GrupoModificador | None:
-        db_obj = self.get(db, id=id)
-        if db_obj:
-            db.delete(db_obj)
-            db.commit()
-        return db_obj
-
-
-# grupo_modificador_repository = GrupoModificadorRepository()
+        (Este é um método personalizado que não está no BaseRepository)
+        """
+        return db.query(self.model).filter(item_id == self.model.item_id).all()

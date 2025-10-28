@@ -1,23 +1,41 @@
-# app/repositories/pedido_item_modificador.py
-import uuid
-from sqlalchemy.orm import Session
+"""
+Repositório para o modelo PedidoItemModificador.
+
+Esta classe é um repositório CRUD puro, herdando toda a sua
+funcionalidade (create, get, get_multi, update, remove)
+da classe BaseRepository.
+"""
+
 from app.models.pedido_item_modificador import PedidoItemModificador
-from app.schemas.pedido_item_modificador import *
+from app.repositories.base import BaseRepository
+from app.schemas.pedido_item_modificador import (
+    PedidoItemModificadorCreate,
+    PedidoItemModificadorUpdate
+)
 
 
-class PedidoItemModificadorRepository:
+class PedidoItemModificadorRepository(
+    BaseRepository[
+        PedidoItemModificador,
+        PedidoItemModificadorCreate,
+        PedidoItemModificadorUpdate
+    ]
+):
+    """
+    Repositório para PedidoItemModificador, herdando de BaseRepository.
 
-    def create(self, db: Session,
-               mod_in: PedidoItemModificadorCreate) -> PedidoItemModificador:
-        db_mod = PedidoItemModificador(
-            preco_cobrado=mod_in.preco_cobrado,
-            pedido_item_id=mod_in.pedido_item_id,
-            opcao_modificador_id=mod_in.opcao_modificador_id
-        )
-        db.add(db_mod)
-        db.commit()
-        db.refresh(db_mod)
-        return db_mod
+    Não contém métodos personalizados, apenas o CRUD genérico.
+    """
 
+    def __init__(self):
+        """
+        Inicializa o repositório base com o modelo ORM PedidoItemModificador.
+        """
+        super().__init__(PedidoItemModificador)
 
-# pedido_item_modificador_repository = PedidoItemModificadorRepository()
+    # -----------------------------------------------------------------
+    # Todos os métodos (create, get, get_multi, update, remove)
+    # são herdados da BaseRepository.
+    #
+    # O método 'create' original foi REMOVIDO por ser duplicado.
+    # -----------------------------------------------------------------

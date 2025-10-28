@@ -1,56 +1,90 @@
-# app/repositories/pedido.py (ATUALIZADO)
+"""
+Repositório para o modelo Pedido.
+
+Herda o CRUD genérico de BaseRepository e implementa métodos
+específicos, como buscas por sessão, por usuário e atualização de status.
+Também sobrescreve 'get_multi' para adicionar ordenação padrão.
+"""
+
+# 1. Importações da biblioteca padrão
 import uuid
-from typing import Any
+from typing import List, Optional, Any
 
+# 2. Importações de terceiros (third-party)
 from sqlalchemy.orm import Session
+
+# 3. Importações locais da aplicação
 from app.models.pedido import Pedido
-from app.schemas.pedido import *
+from app.repositories.base import BaseRepository
+from app.schemas.pedido import PedidoCreate, PedidoUpdate, PedidoStatus
 
 
-class PedidoRepository:
+class PedidoRepository(BaseRepository[Pedido, PedidoCreate, PedidoUpdate]):
+    """
+    Repositório para Pedido, herdando de BaseRepository.
+    """
 
-    # ... (get, get_by_session_id, get_multi_by_usuario, get_multi não mudam) ...
-    def get(self, db: Session, id: uuid.UUID) -> Pedido | None:
-        return db.query(Pedido).filter(Pedido.id == id).first()
+    def __init__(self):
+        """
+        Inicializa o repositório base com o modelo ORM Pedido.
+        """
+        super().__init__(Pedido)
 
-    def get_by_session_id(self, db: Session, session_id: str) -> Pedido | None:
-        return db.query(Pedido).filter(session_id == Pedido.session_id).first()
+    # --- Métodos Sobrescritos (Overridden) ---
 
-    def get_multi_by_usuario(self, db: Session, usuario_id: uuid.UUID, skip: int = 0, limit: int = 100) -> list[
-        type[Pedido]]:
-        return db.query(Pedido) \
-            .filter(usuario_id == Pedido.usuario_id) \
-            .order_by(Pedido.data_criacao.desc()) \
-            .offset(skip).limit(limit).all()
+    def get_multi(
+            self, db: Session, *, skip: int = 0, limit: int = 100
+    ) -> list[type[Pedido]]:
+        """
+        Busca uma lista paginada de pedidos, ordenada por data de criação
+        (mais recentes primeiro).
 
-    def get_multi(self, db: Session, skip: int = 0, limit: int = 100) -> list[type[Pedido]]:
-        return db.query(Pedido) \
-            .order_by(Pedido.data_criacao.desc()) \
-            .offset(skip).limit(limit).all()
-
-    def create(self, db: Session, pedido_in: PedidoCreate) -> Pedido:
-        db_pedido = Pedido(
-            valor_total=pedido_in.valor_total,
-            usuario_id=pedido_in.usuario_id,
-            session_id=pedido_in.session_id,
-
-            # --- NOVOS CAMPOS ---
-            forma_de_pagamento=pedido_in.forma_de_pagamento,
-            nome_cliente_anonimo=pedido_in.nome_cliente_anonimo
-            # --- FIM NOVOS ---
+        (Sobrescreve o get_multi base para adicionar ordenação).
+        """
+        return (
+            db.query(self.model)
+            .order_by(self.model.data_criacao.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
         )
-        db.add(db_pedido)
-        db.commit()
-        db.refresh(db_pedido)
-        return db_pedido
 
-    def update_status(self, db: Session, db_pedido: Pedido,
-                      status: PedidoStatus) -> Pedido:
+    # --- Métodos Específicos deste Repositório ---
+
+    def get_by_session_id(
+            self, db: Session, *, session_id: str
+    ) -> Optional[Pedido]:
+        """Busca um pedido pelo session_id (para clientes não logados)."""
+        return (
+            db.query(self.model)
+            .filter(session_id == self.model.session_id)
+            .first()
+        )
+
+    def get_multi_by_usuario(
+            self,
+            db: Session,
+            *,
+            usuario_id: uuid.UUID,
+            skip: int = 0,
+            limit: int = 100
+    ) -> List[Pedido]:
+        """Busca um histórico paginado de pedidos de um usuário específico."""
+        return (
+            db.query(self.model)
+            .filter(self.model.usuario_id == usuario_id)
+            .order_by(self.model.data_criacao.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+
+    def update_status(
+            self, db: Session, *, db_pedido: Pedido, status: PedidoStatus
+    ) -> Pedido:
+        """Atualiza o status de um pedido existente."""
         db_pedido.status = status
         db.add(db_pedido)
         db.commit()
         db.refresh(db_pedido)
         return db_pedido
-
-
-# pedido_repository = PedidoRepository()

@@ -1,10 +1,19 @@
-# app/schemas/opcao_modificador.py
+"""
+Define os schemas Pydantic (modelos de dados da API)
+para o recurso 'OpcaoModificador'.
+"""
+
+# 1. Importações de bibliotecas padrão
 import uuid
-from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
+# 2. Importações de bibliotecas de terceiros
+from pydantic import BaseModel, ConfigDict
 
+
+# C0115: Adicionada docstring
 class OpcaoModificadorBase(BaseModel):
+    """Campos base compartilhados para uma opção de modificador."""
     nome: str
     preco_adicional: float = 0.0
 

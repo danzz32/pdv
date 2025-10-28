@@ -1,0 +1,2 @@
+# Evitando salvar arquivos de bancos de dados SQLite
+*.db

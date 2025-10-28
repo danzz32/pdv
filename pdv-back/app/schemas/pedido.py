@@ -1,19 +1,33 @@
-# app/schemas/pedido.py (ATUALIZADO)
+"""
+Define os schemas Pydantic (modelos de dados da API)
+para o recurso 'Pedido'. Inclui schemas de entrada (input)
+e schemas de saída (leitura).
+"""
+
+# 1. Importações de bibliotecas padrão
 import uuid
-from pydantic import BaseModel, ConfigDict
-from typing import Optional, List
 from datetime import datetime
-from ..models.pedido import PedidoStatus, FormaPagamento
-from .user import User
+from typing import List, Optional
+
+# 2. Importações de bibliotecas de terceiros
+from pydantic import BaseModel, ConfigDict
+
+# 3. Importações locais da aplicação
+from app.models.pedido import FormaPagamento, PedidoStatus
 from .pedido_item import PedidoItem
+from .user import User
 
 
 # --- Schemas de ENTRADA (Input) para a API ---
+
+
 class PedidoItemModificadorInput(BaseModel):
+    """Schema de entrada para um modificador de item de pedido."""
     opcao_modificador_id: uuid.UUID
 
 
 class PedidoItemInput(BaseModel):
+    """Schema de entrada para um item de pedido (carrinho)."""
     item_id: uuid.UUID
     quantidade: int
     observacoes: Optional[str] = None
@@ -31,7 +45,9 @@ class PedidoCreateAPI(BaseModel):
 
 # --- Schemas de Repositório e Leitura ---
 
+
 class PedidoBase(BaseModel):
+    """Campos base compartilhados para schemas de Pedido."""
     valor_total: float  # O serviço irá calcular isso
 
 
@@ -47,6 +63,7 @@ class PedidoCreate(PedidoBase):
 
 
 class PedidoUpdate(BaseModel):
+    """Schema para atualizar o status de um pedido."""
     status: PedidoStatus
 
 
@@ -55,11 +72,8 @@ class Pedido(PedidoBase):
     id: uuid.UUID
     data_criacao: datetime
     status: PedidoStatus
-
-    # --- NOVOS CAMPOS DE SAÍDA ---
     forma_de_pagamento: FormaPagamento
     nome_cliente_anonimo: Optional[str] = None
-    # --- FIM NOVOS ---
 
     usuario: Optional[User] = None  # Dados do usuário (se houver)
     itens: List[PedidoItem] = []  # Lista de itens do pedido

@@ -11,13 +11,14 @@ engine = create_engine(
     connect_args={"check_same_thread": False}
 )
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# C0103: Renomeado de 'SessionLocal' para 'SESSION_LOCAL'
+SESSION_LOCAL = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
 
 def get_db():
-    db = SessionLocal()
+    db = SESSION_LOCAL()  # Atualizado aqui também
     try:
         yield db
     finally:

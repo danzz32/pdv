@@ -2,7 +2,8 @@ import uuid
 from sqlalchemy import Column, String, Float, ForeignKey, DateTime, Enum, CheckConstraint, UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from ..database import Base
+
+from app.database import Base
 from .enums.pedido_status import PedidoStatus
 from .enums.pedido_pagamento import FormaPagamento
 
@@ -13,17 +14,8 @@ class Pedido(Base):
     data_criacao = Column(DateTime(timezone=True), server_default=func.now())
     status = Column(Enum(PedidoStatus), default=PedidoStatus.PENDENTE)
     valor_total = Column(Float)
-
-    # --- NOVO CAMPO ---
     forma_de_pagamento = Column(Enum(FormaPagamento), nullable=False)
-    # --- FIM NOVO ---
-
-    # --- NOVO CAMPO ---
-    # Usado apenas se usuario_id for NULL
     nome_cliente_anonimo = Column(String, nullable=True)
-    # --- FIM NOVO ---
-
-    # Para checkout logado (nullable=True)
     usuario_id = Column(UUID(as_uuid=True), ForeignKey("usuarios.id"), nullable=True)
     usuario = relationship("User", back_populates="pedidos")
 

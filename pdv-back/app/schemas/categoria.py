@@ -1,16 +1,25 @@
-# app/schemas/categoria.py
+"""
+Define os schemas Pydantic (modelos de dados da API)
+para o recurso 'Categoria'.
+"""
+
+# 1. Importações de bibliotecas padrão
 import uuid
-from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
+# 2. Importações de bibliotecas de terceiros
+from pydantic import BaseModel, ConfigDict
 
+
+# C0115: Adicionada docstring para a classe base
 class CategoriaBase(BaseModel):
+    """Campos base compartilhados por todos os schemas de Categoria."""
     nome: str
 
 
 class CategoriaCreate(CategoriaBase):
     """Schema usado pelo repositório para criar."""
-    pass  # Nenhum campo extra necessário
+    # W0107: 'pass' removido, pois a docstring já serve como corpo da classe
 
 
 class CategoriaUpdate(BaseModel):

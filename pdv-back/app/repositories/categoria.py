@@ -1,42 +1,39 @@
-# app/repositories/categoria.py (CORRIGIDO)
-import uuid
+"""
+Repositório para o modelo Categoria.
+
+Esta classe herda o CRUD genérico de BaseRepository e implementa
+métodos específicos para Categoria, como a busca por nome.
+"""
+
+# 1. Importações da biblioteca padrão
+from typing import Optional
+
+# 2. Importações de terceiros (third-party)
 from sqlalchemy.orm import Session
 
-# --- CORREÇÃO DE IMPORTAÇÃO ---
-# Importamos o modelo com um alias
-from ..models.categoria import Categoria as CategoriaModel
-# Importamos o módulo de schemas
-from app.schemas.categoria import *
+# 3. Importações locais da aplicação
+from app.models.categoria import Categoria
+from app.repositories.base import BaseRepository
+from app.schemas.categoria import CategoriaCreate, CategoriaUpdate
 
 
-# --- FIM DA CORREÇÃO ---
+# A classe agora herda de BaseRepository
+class CategoriaRepository(
+    BaseRepository[Categoria, CategoriaCreate, CategoriaUpdate]
+):
 
+    def __init__(self):
+        """
+        Inicializa o repositório base com o modelo ORM Categoria.
+        """
+        # Passa o modelo Categoria para a classe pai
+        super().__init__(Categoria)
 
-class CategoriaRepository:
+    def get_by_nome(self, db: Session, *, nome: str) -> Optional[Categoria]:
+        """
+        Busca uma categoria específica pelo nome.
 
-    def get(self, db: Session, id: uuid.UUID) -> CategoriaModel | None:
-        # Usa o alias CategoriaModel
-        return db.query(CategoriaModel).filter(id == CategoriaModel.id).first()
-
-    def get_by_nome(self, db: Session, nome: str) -> CategoriaModel | None:
-        # Usa o alias CategoriaModel
-        return db.query(CategoriaModel).filter(nome == CategoriaModel.nome).first()
-
-    def get_multi(self, db: Session, skip: int = 0, limit: int = 100) -> list[CategoriaModel]:
-        # Usa o alias CategoriaModel
-        return db.query(CategoriaModel).offset(skip).limit(limit).all()
-
-    def create(self, db: Session, categoria_in: CategoriaCreate) -> CategoriaModel:
-        # Usa o alias CategoriaModel
-        db_categoria = CategoriaModel(nome=categoria_in.nome)
-        db.add(db_categoria)
-        db.commit()
-        db.refresh(db_categoria)
-        return db_categoria
-
-    def remove(self, db: Session, id: uuid.UUID) -> CategoriaModel | None:
-        db_obj = self.get(db, id=id)
-        if db_obj:
-            db.delete(db_obj)
-            db.commit()
-        return db_obj
+        (Este é um método personalizado que não está no BaseRepository)
+        """
+        # Usamos self.model (definido no __init__) em vez de CategoriaModel
+        return db.query(self.model).filter(nome == self.model.nome).first()

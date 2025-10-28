@@ -13,6 +13,7 @@ passlib
 pydantic==2.12.3
 pydantic[email]
 pydantic-core==2.41.4
+pylint
 pytest
 pytest-mock
 python-dotenv==1.1.1

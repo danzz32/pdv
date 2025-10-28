@@ -1,0 +1,25 @@
+[MAIN]
+# 1. A CORREÇÃO MAIS IMPORTANTE:
+# Corrige o erro E0401 (Unable to import 'app.models'...)
+# Diz ao Pylint para reconhecer a pasta 'app' como um pacote.
+init-hook='import sys; sys.path.append(".")'
+
+[MESSAGES CONTROL]
+# 2. REDUÇÃO DE RUÍDO:
+# Desativa os erros de convenção que mais poluem seu relatório.
+disable=
+    missing-module-docstring,      # C0114
+    missing-class-docstring,       # C0115
+    missing-function-docstring,    # C0116
+    too-few-public-methods,      # R0903
+    redefined-builtin,           # W0622
+    wildcard-import              # W0401
+
+[FORMAT]
+# 3. AJUSTE DE ESTILO:
+max-line-length = 120
+
+[DESIGN]
+# 4. AJUSTE DE COMPLEXIDADE:
+max-args = 7
+max-locals = 20

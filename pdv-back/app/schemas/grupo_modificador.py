@@ -1,11 +1,23 @@
-# app/schemas/grupo_modificador.py
+"""
+Define os schemas Pydantic (modelos de dados da API)
+para o recurso 'GrupoModificador'.
+"""
+
+# 1. Importações de bibliotecas padrão
 import uuid
+# C0411: 'typing' (padrão) movido para antes de 'pydantic' (terceiros)
+from typing import List, Optional
+
+# 2. Importações de bibliotecas de terceiros
 from pydantic import BaseModel, ConfigDict
-from typing import Optional, List
+
+# 3. Importações locais da aplicação
 from .opcao_modificador import OpcaoModificador  # Importa o schema de leitura
 
 
+# C0115: Adicionada docstring
 class GrupoModificadorBase(BaseModel):
+    """Campos base compartilhados para um grupo de modificadores."""
     nome: str
     min_selecao: int = 0
     max_selecao: int = 1

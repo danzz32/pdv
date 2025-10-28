@@ -9,12 +9,11 @@ from app.database import Base, get_db
 from app.main import app
 
 # --- 1. Configuração do Banco de Dados de Teste ---
-# Usaremos um arquivo SQLite separado para os testes.
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,
-    connect_args={"check_same_thread": False}  # Necessário para SQLite
+    connect_args={"check_same_thread": False}
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

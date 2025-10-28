@@ -1,10 +1,9 @@
-# app/auth.py
-from http import HTTPStatus
+"""Módulo placeholder para autenticação e verificação de usuário."""
 
-from fastapi import Depends, HTTPException
+from http import HTTPStatus
 from typing import Optional
 
-from fastapi.openapi.utils import status_code_ranges
+from fastapi import Depends, HTTPException
 
 from app.models.user import User
 

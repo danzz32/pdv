@@ -1,7 +1,8 @@
 import uuid
 from sqlalchemy import Column, String, Integer, ForeignKey, UUID
 from sqlalchemy.orm import relationship
-from ..database import Base
+
+from app.database import Base
 
 
 class GrupoModificador(Base):

@@ -1,11 +1,21 @@
+"""
+Define as rotas (endpoints) da API para o recurso 'Usuário'.
+
+Este módulo utiliza o APIRouter do FastAPI para agrupar as operações
+de criação (registro) de usuários.
+"""
+
+# 1. Importações de bibliotecas padrão (standard library)
 from http import HTTPStatus
-from fastapi import APIRouter, Depends, HTTPException, status
+
+# 2. Importações de bibliotecas de terceiros (third-party)
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
+# 3. Importações locais da aplicação (local application)
+from app.database import get_db
 from app.schemas.user import UserCreate, User as UserSchema
-
 from app.services.user import UserService
-from ..database import get_db
 
 router = APIRouter(
     prefix="/api/users",
@@ -20,7 +30,7 @@ router = APIRouter(
     summary="Criar um novo usuário (Cliente)",
     description="Registra um novo cliente no sistema. A senha será hasheada."
 )
-def create_user_endpoint(
+def create_user(
         user_in: UserCreate,
         db: Session = Depends(get_db),
         service: UserService = Depends(UserService)
@@ -33,7 +43,11 @@ def create_user_endpoint(
     """
     try:
         return service.create_user(db=db, user_in=user_in)
-    except HTTPException as e:
-        raise e
+    except HTTPException:
+        raise  # Deixa o erro 400 do serviço passar
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        # Converte erros inesperados (500)
+        raise HTTPException(
+            status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            detail=f"Erro interno ao criar usuário: {e}"
+        ) from e
